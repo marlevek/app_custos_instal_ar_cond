@@ -143,31 +143,32 @@ with st.sidebar:
 
 # Entrada de materiais adicionais
 st.write('### Adicionar outros materiais')
-st.text_input('Nome do Material:', key='material_input')
-st.number_input('Quantidade:', min_value=0.0, step=0.1, key='quantidade_input')
-st.number_input('Preço Unitário (R$):', min_value=0.0, step=0.1, key='preco_unit_input')
 
-# Inicialização das variáveis de entrada no session_state
-'''if 'material_input' not in st.session_state:
-    st.session_state['material_input'] = ''
-if 'quantidade_input' not in st.session_state:
-    st.session_state['quantidade_input'] = 0.0
-if 'preco_unit_input' not in st.session_state:
-    st.session_state['preco_unit_input'] = 0.0
-if 'reset' not in st.session_state:
-    st.session_state['reset']'''
+# Cria espaços em branco para os campos de entrada
+material_input_container = st.empty()
+quantidade_input_container = st.empty()
+preco_unit_input_container = st.empty()
 
+# Campos de entrada para o material adicional
+with material_input_container:
+    material_input = st.text_input('Nome do Material:')
+with quantidade_input_container:
+    quantidade_input = st.number_input('Quantidade:', min_value=0.0, step=0.1)
+with preco_unit_input_container:
+    preco_unit_input = st.number_input('Preço Unitário (R$):', min_value=0.0, step=0.1)
+    
 # Botão para incluir material adicional
 if st.button('Adicionar Material'):
-    if st.session_state.material_input and st.session_state.quantidade_input > 0 and st.session_state.preco_unit_input > 0:
-        # Função que adiciona o material
-        add_material(
-            st.session_state.material_input, 
-            st.session_state.quantidade_input, 
-            st.session_state.preco_unit_input
-        )
+    if material_input and quantidade_input > 0 and preco_unit_input > 0:
+        add_material(material_input, quantidade_input, preco_unit_input)
+        # Limpa os campos após adicionar o material
+        with material_input_container:
+            st.text_input('Nome do Material:', value='', key='new_material')
+        with quantidade_input_container:
+            st.number_input('Quantidade:', value=0.0, key='new_quantity')
+        with preco_unit_input_container:
+            st.number_input('Preço Unitário (R$):', value=0.0, key='new_price_unit')
         st.success('Material adicionado com sucesso!')
-       
     else:
         st.error('Preencha todos os campos corretamente.')
         
