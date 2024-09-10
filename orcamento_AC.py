@@ -38,14 +38,27 @@ if 'materiais' not in st.session_state:
 # Função para adicionar um novo material à tabela
 def add_material(material, quantidade, preco_unit):
     preco_total = quantidade * preco_unit
-    # Adiciona o material à lista de materiais mantida na sessão
     st.session_state['materiais'].append({
         'Material': material,
         'Quantidade': quantidade,
         'Preço Unitário (R$)': preco_unit,
         'Preço Total (R$)': preco_total
     })
-    
+
+# Função para resetar os campos após adicionar material
+def reset_inputs():
+    st.session_state['material_input'] = ''
+    st.session_state['quantidade_input'] = 0.0
+    st.session_state['preco_unit_input'] = 0.0
+
+# Inicialização das variáveis de entrada no session_state
+if 'material_input' not in st.session_state:
+    st.session_state['material_input'] = ''
+if 'quantidade_input' not in st.session_state:
+    st.session_state['quantidade_input'] = 0.0
+if 'preco_unit_input' not in st.session_state:
+    st.session_state['preco_unit_input'] = 0.0
+
 # Campo para o nome do cliente
 cliente = st.text_input('Nome do Cliente: ').strip()
 
@@ -144,34 +157,31 @@ with st.sidebar:
 # Entrada de materiais adicionais
 st.write('### Adicionar outros materiais')
 
-# Cria espaços em branco para os campos de entrada
-material_input_container = st.empty()
-quantidade_input_container = st.empty()
-preco_unit_input_container = st.empty()
-
-# Campos de entrada para o material adicional
-with material_input_container:
-    material_input = st.text_input('Nome do Material:')
-with quantidade_input_container:
-    quantidade_input = st.number_input('Quantidade:', min_value=0.0, step=0.1)
-with preco_unit_input_container:
-    preco_unit_input = st.number_input('Preço Unitário (R$):', min_value=0.0, step=0.1)
+# Inicialização das variáveis de entrada no session_state
+if 'material_input' not in st.session_state:
+    st.session_state['material_input'] = ''
+if 'quantidade_input' not in st.session_state:
+    st.session_state['quantidade_input'] = 0.0
+if 'preco_unit_input' not in st.session_state:
+    st.session_state['preco_unit_input'] = 0.0
     
+# Campos de entrada para o material adicional
+st.session_state['material_input'] = st.text_input('Nome do Material:', value=st.session_state['material_input'])
+st.session_state['quantidade_input'] = st.number_input('Quantidade:', min_value=0.0, step=0.1, value=st.session_state['quantidade_input'])
+st.session_state['preco_unit_input'] = st.number_input('Preço Unitário (R$):', min_value=0.0, step=0.1, value=st.session_state['preco_unit_input'])
+
 # Botão para incluir material adicional
 if st.button('Adicionar Material'):
-    if material_input and quantidade_input > 0 and preco_unit_input > 0:
-        add_material(material_input, quantidade_input, preco_unit_input)
-        # Limpa os campos após adicionar o material
-        with material_input_container:
-            st.text_input('Nome do Material:', value='', key='new_material')
-        with quantidade_input_container:
-            st.number_input('Quantidade:', value=0.0, key='new_quantity')
-        with preco_unit_input_container:
-            st.number_input('Preço Unitário (R$):', value=0.0, key='new_price_unit')
+    if st.session_state['material_input'] and st.session_state['quantidade_input'] > 0 and st.session_state['preco_unit_input'] > 0:
+        add_material(st.session_state['material_input'], st.session_state['quantidade_input'], st.session_state['preco_unit_input'])
         st.success('Material adicionado com sucesso!')
+        # Limpa os campos após adicionar o material
+        st.session_state['material_input'] = ''
+        st.session_state['quantidade_input'] = 0.0
+        st.session_state['preco_unit_input'] = 0.0
     else:
         st.error('Preencha todos os campos corretamente.')
-        
+
 # Exibição da tabela de materiais usando AgGrid
 if st.session_state['materiais']:
     df = pd.DataFrame(st.session_state['materiais'])
@@ -217,3 +227,5 @@ if st.button('Salvar Orçamento'):
         file_name='orcamento_instalacao.xlsx',
         mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
+
+
