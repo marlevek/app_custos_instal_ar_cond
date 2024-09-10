@@ -55,11 +55,11 @@ with st.sidebar:
     st.write('## Tubulação de Cobre')
     
     # Usando selectbox para garantir entrada consistente
-    cobre_succao = st.selectbox('Selecione a bitola da linha de succão:', ['1/4', '3/8', '1/2', '5/8', '7/8', '3/4'])
-    cobre_liquido = st.selectbox('Selecione a bitola da linha de líquido:', ['1/4', '3/8', '1/2'])
+    cobre_liquido = st.selectbox('Selecione a bitola da linha de líquido:', ['1/4', '3/8', '5/8', '3/4'])
+    cobre_succao = st.selectbox('Selecione a bitola da linha de succão:', ['3/8', '1/2', '5/8', '7/8', '3/4'])
     metros = st.number_input('Digite quantos metros tem a linha:', min_value=0.0, step=0.1)
     
-    valor_cobre = 97.00
+    valor_cobre = st.number_input('Digite o preço do kilo do cobre:', min_value=0.1, step=0.1)
     preco_cobre = 0
            
     if cobre_succao == '3/8' and cobre_liquido == '1/4':
@@ -67,14 +67,25 @@ with st.sidebar:
         
     elif cobre_succao == '1/2' and cobre_liquido == '1/4':
         preco_cobre = float(metros * 0.285 + metros * 0.132) * valor_cobre
-        
-    elif cobre_succao == '5/8' and cobre_liquido == '3/8':
-        preco_cobre = float(metros * 0.365 + metros * 0.255) * valor_cobre
-        
+    
     elif cobre_succao == '5/8' and cobre_liquido == '1/4':
         preco_cobre = float(metros * 0.365 + metros * 0.132) * valor_cobre
         
+    elif cobre_succao == '5/8' and cobre_liquido == '3/8':
+        preco_cobre = float(metros * 0.365 + metros * 0.255) * valor_cobre
+          
+    elif cobre_succao == '7/8' and cobre_liquido == '3/8':
+        preco_cobre = float(metros * 0.520 + metros * 0.255) * valor_cobre 
     
+    elif cobre_succao == '7/8' and cobre_liquido == '3/4':
+        preco_cobre = float(metros * 0.520 + metros * 0.415) * valor_cobre 
+    
+    elif cobre_succao == '3/4' and cobre_liquido == '3/8':
+        preco_cobre = float(metros * 0.415 + metros * 0.255) * valor_cobre
+    
+    elif cobre_succao == '3/4' and cobre_liquido == '5/8':
+        preco_cobre = float(metros * 0.415 + metros * 0.365) * valor_cobre 
+        
     else:
         st.warning('Combinação de bitolas não reconhecida. Verifique os valores inseridos.')
         
@@ -161,7 +172,6 @@ if st.button('Adicionar Material'):
     else:
         st.error('Preencha todos os campos corretamente.')
         
-
 # Exibição da tabela de materiais usando AgGrid
 if st.session_state['materiais']:
     df = pd.DataFrame(st.session_state['materiais'])
@@ -176,7 +186,20 @@ if st.session_state['materiais']:
 # Cálculo do preço total dos materiais
 if st.session_state['materiais']:
     preco_total = sum(item['Preço Total (R$)'] for item in st.session_state['materiais'])
-    st.write(f'**Preço Total da Instalação: R$ {preco_total:.2f}**')
+    st.write(f'**Valor da Instalação sem Markup: R$ {preco_total:.2f}**')
+
+# Campos para impostos e lucro antes do cálculo do valor total
+st.write('### Calcular Markup')
+impostos = st.number_input('Impostos (%): - digite só o número', min_value=0.0, step=0.1)
+lucro = st.number_input('Lucro desejado (%) - digite só números', min_value=0.0, step=0.1)
+
+# Cálculo do markup
+if impostos + lucro < 100:
+    markup = 100 / (100 - (impostos + lucro))
+    valor_final = preco_total * markup
+    st.write(f'**Valor Final da Instalação: R$ {valor_final:.2f}**')
+else:
+    st.error('A soma de impostos e lucro deve ser menor que 100%')
 
 # Botão para salvar o orçamento em Excel
 if st.button('Salvar Orçamento'):
