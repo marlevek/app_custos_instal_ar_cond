@@ -193,6 +193,9 @@ if st.session_state['materiais']:
     st.write('## Tabela de Materiais')
     AgGrid(df, gridOptions=gridOptions, enable_enterprise_modules=True, fit_columns_on_grid_load=True)
 
+# Definindo preco_total com um valor padrão para evitar erros
+preco_total = 0.0
+
 # Cálculo do preço total dos materiais
 if st.session_state['materiais']:
     preco_total = sum(item['Preço Total (R$)'] for item in st.session_state['materiais'])
@@ -200,14 +203,15 @@ if st.session_state['materiais']:
 
 # Campos para impostos e lucro antes do cálculo do valor total
 st.write('### Calcular Markup')
-impostos = st.number_input('Impostos (%): - digite só o número', min_value=0.0, step=0.1)
-lucro = st.number_input('Lucro desejado (%) - digite só números', min_value=0.0, step=0.1)
+impostos = st.number_input('Impostos (%): - digite só número', min_value=0.0, step=0.1)
+lucro = st.number_input('Lucro desejado (%) - digite só número', min_value=0.0, step=0.1)
 
 # Cálculo do markup
 if impostos + lucro < 100:
     markup = 100 / (100 - (impostos + lucro))
     valor_final = preco_total * markup
     st.write(f'**Valor Final da Instalação: R$ {valor_final:.2f}**')
+    st.write(f'**O lucro dessa instalação é de R$ {valor_final - preco_total:.2f}**')
 else:
     st.error('A soma de impostos e lucro deve ser menor que 100%')
 
