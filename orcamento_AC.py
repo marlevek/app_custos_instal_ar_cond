@@ -148,14 +148,14 @@ st.number_input('Quantidade:', min_value=0.0, step=0.1, key='quantidade_input')
 st.number_input('Preço Unitário (R$):', min_value=0.0, step=0.1, key='preco_unit_input')
 
 # Inicialização das variáveis de entrada no session_state
-if 'material_input' not in st.session_state:
+'''if 'material_input' not in st.session_state:
     st.session_state['material_input'] = ''
 if 'quantidade_input' not in st.session_state:
     st.session_state['quantidade_input'] = 0.0
 if 'preco_unit_input' not in st.session_state:
     st.session_state['preco_unit_input'] = 0.0
 if 'reset' not in st.session_state:
-    st.session_state['reset']
+    st.session_state['reset']'''
 
 # Botão para incluir material adicional
 if st.button('Adicionar Material'):
