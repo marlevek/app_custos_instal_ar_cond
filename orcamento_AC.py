@@ -1,5 +1,5 @@
 import streamlit as st
-from st_aggrid import AgGrid, GridOptionsBuilder
+from st_aggrid import AgGrid, GridOptionsBuilder, JsCode
 import pandas as pd
 import io
 
@@ -182,16 +182,27 @@ if st.button('Adicionar Material'):
     else:
         st.error('Preencha todos os campos corretamente.')
 
-# Exibição da tabela de materiais usando AgGrid
+# Exibição da tabela de materiais usando AgGrid com a funcionalidade de edição habilitada
 if st.session_state['materiais']:
     df = pd.DataFrame(st.session_state['materiais'])
     gb = GridOptionsBuilder.from_dataframe(df)
     gb.configure_pagination()
     gb.configure_side_bar()
+    gb.configure_columns(['Quantidade', 'Preço Unitário (R$)', 'Preço Total (R$)'], editable=True)
     gridOptions = gb.build()
     
     st.write('## Tabela de Materiais')
-    AgGrid(df, gridOptions=gridOptions, enable_enterprise_modules=True, fit_columns_on_grid_load=True)
+    grid_response = AgGrid(
+        df, 
+        gridOptions=gridOptions, 
+        enable_enterprise_modules=True, 
+        fit_columns_on_grid_load=True, 
+        update_mode='MODEL_CHANGED'  # Permite capturar mudanças nos valores da tabela
+    )
+    
+    # Atualiza o session_state com as edições feitas na tabela
+    df_updated = grid_response['data']
+    st.session_state['materiais'] = df_updated.to_dict('records')
 
 # Definindo preco_total com um valor padrão para evitar erros
 preco_total = 0.0
