@@ -1,9 +1,9 @@
 import streamlit as st
-from st_aggrid import AgGrid, GridOptionsBuilder, ColumnsAutoSizeMode, DataReturnMode
+from st_aggrid import AgGrid, GridOptionsBuilder
 import pandas as pd
 import io
 
-# Configuração da página
+# page_icon: https://streamlit-emoji-shortcodes-streamlit-app-gwckff.streamlit.app/
 st.set_page_config(page_title='Custos Instalação Ar Condicionado', page_icon='🌀')
 st.title('Custos Instalação Ar Condicionado')
 
@@ -11,8 +11,8 @@ st.title('Custos Instalação Ar Condicionado')
 st.markdown("""
     <style>
     .stButton>button {
-        background-color: #4CAF50;
-        color: white;
+        background-color: #4CAF50; /* Cor de fundo do botão */
+        color: white; /* Cor do texto */
         border: none;
         padding: 10px 20px;
         text-align: center;
@@ -25,7 +25,7 @@ st.markdown("""
         transition-duration: 0.4s;
     }
     .stButton>button:hover {
-        background-color: #45a049;
+        background-color: #4CAF50; /* Cor de fundo ao passar o mouse */
         color: black;
     }
     </style>
@@ -38,127 +38,145 @@ if 'materiais' not in st.session_state:
 # Função para adicionar um novo material à tabela
 def add_material(material, quantidade, preco_unit):
     preco_total = quantidade * preco_unit
+    # Adiciona o material à lista de materiais mantida na sessão
     st.session_state['materiais'].append({
         'Material': material,
         'Quantidade': quantidade,
         'Preço Unitário (R$)': preco_unit,
         'Preço Total (R$)': preco_total
     })
-
-# Função para recalcular os preços totais com base nas edições da tabela
-def recalcular_tabela(data):
-    df = pd.DataFrame(data)
-    df['Preço Total (R$)'] = df['Quantidade'] * df['Preço Unitário (R$)']
-    return df.to_dict('records')
-
-# Inicialização das variáveis de entrada
-if 'material_input' not in st.session_state:
-    st.session_state['material_input'] = ''
-if 'quantidade_input' not in st.session_state:
-    st.session_state['quantidade_input'] = 0.0
-if 'preco_unit_input' not in st.session_state:
-    st.session_state['preco_unit_input'] = 0.0
+    
+# Campo para o nome do cliente
+cliente = st.text_input('Nome do Cliente: ').strip()
 
 # Barra lateral com os dados da instalação
 with st.sidebar:
     st.title('Custos e Despesas')
-    cobre_liquido = st.selectbox('Selecione a bitola da linha de líquido:', ['1/4', '3/8', '5/8', '3/4'])
-    cobre_succao = st.selectbox('Selecione a bitola da linha de succão:', ['3/8', '1/2', '5/8', '7/8', '3/4'])
+    st.write('## Tubulação de Cobre')
+    
+    # Usando selectbox para garantir entrada consistente
+    cobre_succao = st.selectbox('Selecione a bitola da linha de succão:', ['1/4', '3/8', '1/2', '5/8', '7/8', '3/4'])
+    cobre_liquido = st.selectbox('Selecione a bitola da linha de líquido:', ['1/4', '3/8', '1/2'])
     metros = st.number_input('Digite quantos metros tem a linha:', min_value=0.0, step=0.1)
-    valor_cobre = st.number_input('Digite o preço do kilo do cobre:', min_value=0.1, step=0.1)
-
-    # Cálculo do preço do cobre com base nas bitolas e metros
+    
+    valor_cobre = 97.00
     preco_cobre = 0
+           
     if cobre_succao == '3/8' and cobre_liquido == '1/4':
         preco_cobre = float(metros * 0.255 + metros * 0.132) * valor_cobre
+        
     elif cobre_succao == '1/2' and cobre_liquido == '1/4':
         preco_cobre = float(metros * 0.285 + metros * 0.132) * valor_cobre
-    elif cobre_succao == '5/8' and cobre_liquido == '1/4':
-        preco_cobre = float(metros * 0.365 + metros * 0.132) * valor_cobre
+        
     elif cobre_succao == '5/8' and cobre_liquido == '3/8':
         preco_cobre = float(metros * 0.365 + metros * 0.255) * valor_cobre
-    elif cobre_succao == '7/8' and cobre_liquido == '3/8':
-        preco_cobre = float(metros * 0.520 + metros * 0.255) * valor_cobre
-    elif cobre_succao == '7/8' and cobre_liquido == '3/4':
-        preco_cobre = float(metros * 0.520 + metros * 0.415) * valor_cobre
-    elif cobre_succao == '3/4' and cobre_liquido == '3/8':
-        preco_cobre = float(metros * 0.415 + metros * 0.255) * valor_cobre
-    elif cobre_succao == '3/4' and cobre_liquido == '5/8':
-        preco_cobre = float(metros * 0.415 + metros * 0.365) * valor_cobre
+        
+    elif cobre_succao == '5/8' and cobre_liquido == '1/4':
+        preco_cobre = float(metros * 0.365 + metros * 0.132) * valor_cobre
+        
+    
     else:
-        st.warning('Combinação de bitolas não reconhecida.')
-
+        st.warning('Combinação de bitolas não reconhecida. Verifique os valores inseridos.')
+        
     # Adiciona o preço do cobre à tabela de materiais
     if st.button('Adicionar Cobre'):
         if preco_cobre > 0:
-            add_material(f'Cobre (Sucção: {cobre_succao}, Líquido: {cobre_liquido})', metros, preco_cobre / metros)
-            st.success(f'O valor do cobre é R$ {preco_cobre:.2f} e foi adicionado à tabela.')
+            add_material('Cobre (Sucção: )' + cobre_succao + ', Líquido: ' + cobre_liquido + ')', metros, preco_cobre / metros)
+            st.success(f'O valor do cobre é R$ {preco_cobre:.2f} e foi adicionado à tabela ')
         else:
-            st.error('Não foi possível calcular o valor do cobre.')
+            st.error('Não foi possível calcular o valor do cobre. Verifique os dados inseridos')    
+    
+    # Seção para cálculo do km rodado
+    st.write('### Cálculo do km rodado (ida e volta) até o local do serviço') 
+    tipo_combustivel = st.selectbox('Combustível:', ['Gasolina', 'Etanol', 'Diesel'])
+    preco_litro = st.number_input('Preço do litro do combustível (R$):', min_value=0.0, step=0.1)
+    km_rodado = st.number_input('Distância em km até o local do serviço:', min_value=0.0, step=0.1)
+    consumo_por_km = st.number_input('Consumo médio do veículo (km/L):', min_value=0.1, step=0.1)
+    
+    # Cálculo do custo do km rodado
+    preco_km = (km_rodado / consumo_por_km) * preco_litro
+    
+    # Adiciona o preço do km rodado à tabela de materiais
+    if st.button('Adicionar km rodado'):
+        if preco_km > 0:
+            add_material(f'Km rodado ({tipo_combustivel})', km_rodado, preco_km / km_rodado)
+            st.success(f'Preço do km rodado adicionado: R${preco_km:.2f}')
+        else:
+            st.error('Não foi possível calcular o preço do km rodado. Verifique os dados inseridos.')
 
-# Seção para entrada de outros materiais
+    # Outros custos
+    st.write('## Outros Custos')
+    # Alimentação
+    st.subheader('Alimentação')
+    pessoas_alim = st.number_input('Quantas pessoas', min_value=1, step=1)
+    custo_alim = st.number_input('Preço', min_value=1.0, step=1.0)
+    custo_total_alim = pessoas_alim * custo_alim
+    if st.button('Adicionar Alimentação'):
+        if custo_total_alim > 0:
+            add_material('Alimentação', pessoas_alim, custo_total_alim / pessoas_alim)
+            st.success(f'Custos de alimentação adicionado: R$ {custo_total_alim:.2f}')
+        else:
+            st.error('Não foi possível adicionar custos de alimentação. Verifique os valores.')
+    
+    # Ajudante
+    st.subheader('Ajudante')
+    qtde_ajudante = st.number_input('Quantos ajudantes', min_value=1, step=1)
+    valor_ajudante = st.number_input('Valor Diária', min_value=1.0, step=1.0)
+    total_ajudante = valor_ajudante * qtde_ajudante
+    if st.button('Adicionar Ajudante'):
+        if total_ajudante > 0:
+            add_material('Ajudante', qtde_ajudante, total_ajudante / qtde_ajudante)
+            st.success(f'Custos do ajudante adicionado: R$ {total_ajudante:.2f}')
+        else:
+            st.error('Não foi possível adicionar custos com ajudante. Verifique os dados')   
+
+# Entrada de materiais adicionais
 st.write('### Adicionar outros materiais')
-st.session_state['material_input'] = st.text_input('Nome do Material:', value=st.session_state['material_input'])
-st.session_state['quantidade_input'] = st.number_input('Quantidade:', min_value=0.0, step=0.1, value=st.session_state['quantidade_input'])
-st.session_state['preco_unit_input'] = st.number_input('Preço Unitário (R$):', min_value=0.0, step=0.1, value=st.session_state['preco_unit_input'])
 
-# Botão para adicionar material adicional
+# Cria espaços em branco para os campos de entrada
+material_input_container = st.empty()
+quantidade_input_container = st.empty()
+preco_unit_input_container = st.empty()
+
+# Campos de entrada para o material adicional
+with material_input_container:
+    material_input = st.text_input('Nome do Material:')
+with quantidade_input_container:
+    quantidade_input = st.number_input('Quantidade:', min_value=0.0, step=0.1)
+with preco_unit_input_container:
+    preco_unit_input = st.number_input('Preço Unitário (R$):', min_value=0.0, step=0.1)
+
+# Botão para incluir material adicional
 if st.button('Adicionar Material'):
-    if st.session_state['material_input'] and st.session_state['quantidade_input'] > 0 and st.session_state['preco_unit_input'] > 0:
-        add_material(st.session_state['material_input'], st.session_state['quantidade_input'], st.session_state['preco_unit_input'])
+    if material_input and quantidade_input > 0 and preco_unit_input > 0:
+        add_material(material_input, quantidade_input, preco_unit_input)
+        # Limpa os campos após adicionar o material
+        with material_input_container:
+            st.text_input('Nome do Material:', value='', key='new_material')
+        with quantidade_input_container:
+            st.number_input('Quantidade:', value=0.0, key='new_quantity')
+        with preco_unit_input_container:
+            st.number_input('Preço Unitário (R$):', value=0.0, key='new_price_unit')
         st.success('Material adicionado com sucesso!')
-        st.session_state['material_input'] = ''
-        st.session_state['quantidade_input'] = 0.0
-        st.session_state['preco_unit_input'] = 0.0
     else:
         st.error('Preencha todos os campos corretamente.')
+        
 
 # Exibição da tabela de materiais usando AgGrid
 if st.session_state['materiais']:
     df = pd.DataFrame(st.session_state['materiais'])
-    
-    # Configuração da tabela para permitir edição
     gb = GridOptionsBuilder.from_dataframe(df)
-    gb.configure_pagination(paginationAutoPageSize=True)
+    gb.configure_pagination()
     gb.configure_side_bar()
-    gb.configure_default_column(editable=True)
     gridOptions = gb.build()
-
-    # Exibição da tabela
-    response = AgGrid(
-        df,
-        gridOptions=gridOptions,
-        data_return_mode=DataReturnMode.FILTERED_AND_SORTED,
-        update_mode='MODEL_CHANGED',
-        fit_columns_on_grid_load=True,
-        editable=True,
-        columns_auto_size_mode=ColumnsAutoSizeMode.FIT_CONTENTS
-    )
-
-    # Atualizar a tabela após edição
-    updated_data = response['data']
-    if updated_data is not None and not updated_data.empty:
-        df_updated = pd.DataFrame(updated_data)
-        df_updated['Preço Total (R$)'] = df_updated['Quantidade'] * df_updated['Preço Unitário (R$)']
-        st.session_state['materiais'] = df_updated.to_dict('records')
-        st.success('Tabela atualizada com sucesso!')
+    
+    st.write('## Tabela de Materiais')
+    AgGrid(df, gridOptions=gridOptions, enable_enterprise_modules=True, fit_columns_on_grid_load=True)
 
 # Cálculo do preço total dos materiais
-preco_total = sum(item['Preço Total (R$)'] for item in st.session_state['materiais'])
-st.write(f'**Valor da Instalação sem Markup: R$ {preco_total:.2f}**')
-
-# Campos para impostos e lucro
-st.write('### Calcular Markup')
-impostos = st.number_input('Impostos (%):', min_value=0.0, step=0.1)
-lucro = st.number_input('Lucro desejado (%):', min_value=0.0, step=0.1)
-
-# Cálculo do valor final com markup
-if impostos + lucro < 100:
-    markup = 1 + (impostos + lucro) / 100
-    valor_final = preco_total * markup
-    st.write(f'**Valor da Instalação com Markup: R$ {valor_final:.2f}**')
-else:
-    st.error('A soma de impostos e lucro não pode ser maior que 100%.')
+if st.session_state['materiais']:
+    preco_total = sum(item['Preço Total (R$)'] for item in st.session_state['materiais'])
+    st.write(f'**Preço Total da Instalação: R$ {preco_total:.2f}**')
 
 # Botão para salvar o orçamento em Excel
 if st.button('Salvar Orçamento'):
@@ -176,3 +194,4 @@ if st.button('Salvar Orçamento'):
         file_name='orcamento_instalacao.xlsx',
         mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
+    
