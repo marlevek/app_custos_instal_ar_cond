@@ -1,10 +1,11 @@
 import streamlit as st
 from st_aggrid import AgGrid, GridOptionsBuilder
 import pandas as pd
+from fpdf import FPDF
 import io
 
 # page_icon: https://streamlit-emoji-shortcodes-streamlit-app-gwckff.streamlit.app/
-st.set_page_config(page_title='Custos Instalação Ar Condicionado', page_icon=':mechanic:')
+st.set_page_config(page_title='Custos Instalação Ar Condicionado', page_icon=':mechanic:', layout='wide')
 st.title('Orçamento Instalação Ar-Condicionado :mechanic:')
 
 # Adiciona o estilo CSS para alterar a cor dos botões
@@ -104,6 +105,19 @@ with st.sidebar:
 
     # Outros custos
     st.write('## Outros Custos')
+    
+        # Ajudante
+    st.subheader('Ajudante')
+    qtde_ajudante = st.number_input('Quantos ajudantes', min_value=1, step=1)
+    valor_ajudante = st.number_input('Valor Diária', min_value=1.0, step=1.0)
+    total_ajudante = valor_ajudante * qtde_ajudante
+    if st.button('Adicionar Ajudante'):
+        if total_ajudante > 0:
+            add_material('Ajudante', qtde_ajudante, total_ajudante / qtde_ajudante)
+            st.success(f'Custos do ajudante adicionado: R$ {total_ajudante:.2f}')
+        else:
+            st.error('Não foi possível adicionar custos com ajudante. Verifique os dados') 
+    
     # Alimentação
     st.subheader('Alimentação')
     pessoas_alim = st.number_input('Quantas pessoas', min_value=1, step=1)
@@ -116,18 +130,6 @@ with st.sidebar:
         else:
             st.error('Não foi possível adicionar custos de alimentação. Verifique os valores.')
     
-    # Ajudante
-    st.subheader('Ajudante')
-    qtde_ajudante = st.number_input('Quantos ajudantes', min_value=1, step=1)
-    valor_ajudante = st.number_input('Valor Diária', min_value=1.0, step=1.0)
-    total_ajudante = valor_ajudante * qtde_ajudante
-    if st.button('Adicionar Ajudante'):
-        if total_ajudante > 0:
-            add_material('Ajudante', qtde_ajudante, total_ajudante / qtde_ajudante)
-            st.success(f'Custos do ajudante adicionado: R$ {total_ajudante:.2f}')
-        else:
-            st.error('Não foi possível adicionar custos com ajudante. Verifique os dados')   
-
 # Entrada de materiais adicionais
 st.write('### Adicionar outros materiais')
 
@@ -203,31 +205,97 @@ st.write('Lucro:')
 lucro =  st.number_input('Digite o valor do seu lucro. Ex.: 15 para 15%', min_value=0.0, step=0.1)
 markup = 1 + (imposto / 100) + (lucro / 100)
 
-
 # Cálculo do preço total da instalação
 btn_valor_total = st.button('Calcular Valor Total')
 if btn_valor_total:
-    valor_total_instalacao = (preco_total + custos_fixos) * markup 
-    st.write(f'**Valor Total da Instalação: R$ {valor_total_instalacao:.2f}')
+    if not st.session_state['materiais']:
+        st.error('Certifique-se de adicionar materiais antes de calcular o valor total.')
+    elif custos_fixos <= 0 or preco_total <= 0 or markup <= 0:
+        st.error('Certifique-se de preencher os campos obrigatórios para custos fixos, custos variáveis e markup.')
+    else:
+        # Agora, realiza o cálculo apenas se os dados estiverem completos
+        valor_total_instalacao = (preco_total + custos_fixos) * markup
+        st.write(f'**Valor Total da Instalação: R$ {valor_total_instalacao:.2f}')
+        lucro_obtido = valor_total_instalacao - preco_total
+        st.write(f'O lucro nessa instalação é de: R$ {lucro_obtido:.2f}')
 
-    # Lucro obtido
-    lucro_obtido = valor_total_instalacao - preco_total
-    st.write(f'O lucro nessa instalação é de: R$ {lucro_obtido:.2f}')
 
 # Botão para salvar o orçamento em Excel
-if st.button('Salvar Orçamento'):
-    output = io.BytesIO()
-    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-        df.to_excel(writer, index=False, sheet_name='Orçamento')
+if st.button('Salvar Orçamento em excel'):
+    if cliente and st.session_state['materiais']:
+        df = pd.DataFrame(st.session_state['materiais'])
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+            df.to_excel(writer, index=False, sheet_name='Orçamento')
         
         # Adiciona o nome do cliente na primeira célula
-        workbook = writer.book
-        worksheet = writer.sheets['Orçamento']
-        worksheet.write('A1', f'Nome do Cliente: {cliente}')
-    st.download_button(
-        label='Baixar Orçamento em Excel',
-        data=output.getvalue(),
-        file_name='orcamento_instalacao.xlsx',
-        mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-    )
+            workbook = writer.book
+            worksheet = writer.sheets['Orçamento']
+            worksheet.write('A1', f'Nome do Cliente: {cliente}')
+        st.download_button(
+            label='Baixar Orçamento em Excel',
+            data=output.getvalue(),
+            file_name='orcamento_instalacao.xlsx',
+            mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+    else:
+        st.error('Certifique-se de preencher o nome do cliente e adicionar os materiais antes de gerar o arquivo em excel.')
+
+
+# Função paa criar PDF
+def criar_pdf(cliente, materiais, custos_fixos, preco_total, markup, valor_total_instalacao):
+    pdf = FPDF()
+    pdf.set_auto_page_break(auto=True, margin=15)
+    pdf.add_page()
+    pdf.set_font('Arial', size=12)
+    
+    pdf.set_font('Arial', style='B', size=14) # titulo
+    pdf.cell(200, 10, txt='Orçamento - Instalação de Ar-Condicionado', ln=True, align='C')
+    
+    # Dados Cliente
+    pdf.set_font('Arial', size=12)
+    pdf.ln(10)
+    pdf.cell(200, 10, text=f'Cliente: {cliente}', ln=True, align='L')
+    
+    # Tabela de Materiais
+    pdf.ln(10)
+    pdf.cell(200, 10, text='Materiais', ln=True, align='L')
+    pdf.set_font('Arial', size=10)
+    for item in materiais:
+        material = item['Material']
+        quantidade = item['Quantidade']
+        preco_unit = item['Preço Unitário (R$)']
+        preco_total_item = item['Preço Total (R$)']
+        pdf.cell(200, 10, txt=f'{material} - {quantidade}x - R$ {preco_unit:.2f} (Total: R$ {preco_total_item:.2f})', ln=True)
+    
+    # Custos Fixos
+    pdf.ln(10)
+    pdf.set_font('Arial', size=12)
+    pdf.cell(200, 10, text=f'Custos Fixos: R$ {custos_fixos:.2f}', ln=True)
+    
+    # Custos Variáveis
+    pdf.cell(200, 10, text=f'Custos Variáveis: R$ {preco_total:.2f}', ln=True)
+    
+    # Markup e valor total
+    pdf.cell(200, 10, text=f'Markup Aplicado: {markup:.2f}', ln=True)
+    pdf.set_font('Arial', style='B', size=12)
+    pdf.cell(200, 10, text=f'Valor Total da Instalação: R$ {valor_total_instalacao:.2f}', ln=True)
+    
+    return pdf
+
+# Botão para salvar o orçamento em PDF
+if st.button('Salvar orçamento em PDF'):
+    if cliente and st.session_state['materiais']:
+        pdf = criar_pdf(cliente, st.session_state['materiais'], custos_fixos, preco_total, markup, valor_total_instalacao)
+        pdf_output = io.BytesIO()
+        pdf.output(pdf_output, 'F')
+        st.download_button(
+            label='Baixar Orçamento em PDF',
+            data = pdf_output.getvalue(),
+            file_name='orcamento_instalacao.pdf',
+            mime='application/pdf',
+        )
+    else:
+        st.error('Certifique-se de preencher o nome do cliente e adicionar os materiais antes de gerar o pdf.')
+
     
