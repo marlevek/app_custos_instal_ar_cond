@@ -50,125 +50,149 @@ def add_material(material, quantidade, preco_unit):
 # Campo para o nome do cliente
 cliente = st.text_input('Nome do Cliente: ').strip()
 
-# Barra lateral com os dados da instalação
-with st.sidebar:
-    st.title('Custos e Despesas da Instalação ar-condicionado')
-    st.write('## Tubulação de Cobre')
-    
-    # Usando selectbox para garantir entrada consistente
-    cobre_liquido = st.selectbox('Selecione a bitola da linha de líquido:', ['1/4', '3/8'])
-    cobre_succao = st.selectbox('Selecione a bitola da linha de succão:', ['3/8', '1/2', '5/8', '7/8', '3/4'])
-    metros = st.number_input('Digite quantos metros tem a linha:', min_value=0.0, step=0.1)
-    valor_cobre = st.number_input('Digite o preço do kg do cobre')
-    preco_cobre = 0
-           
-    if cobre_succao == '3/8' and cobre_liquido == '1/4':
-        preco_cobre = float(metros * 0.255 + metros * 0.132) * valor_cobre
-        
-    elif cobre_succao == '1/2' and cobre_liquido == '1/4':
-        preco_cobre = float(metros * 0.285 + metros * 0.132) * valor_cobre
-        
-    elif cobre_succao == '5/8' and cobre_liquido == '3/8':
-        preco_cobre = float(metros * 0.365 + metros * 0.255) * valor_cobre
-        
-    elif cobre_succao == '5/8' and cobre_liquido == '1/4':
-        preco_cobre = float(metros * 0.365 + metros * 0.132) * valor_cobre
-    
-    else:
-        st.warning('Combinação de bitolas não reconhecida. Verifique os valores inseridos.')
-        
-    # Adiciona o preço do cobre à tabela de materiais
-    if st.button('Adicionar Cobre'):
-        if preco_cobre > 0:
-            add_material('Cobre (Sucção: )' + cobre_succao + ', Líquido: ' + cobre_liquido + ')', metros, preco_cobre / metros)
-            st.success(f'O valor do cobre é R$ {preco_cobre:.2f} e foi adicionado à tabela ')
-        else:
-            st.error('Não foi possível calcular o valor do cobre. Verifique os dados inseridos')    
-    
-    # Seção para cálculo do km rodado
-    st.write('### Cálculo do km rodado (ida e volta) até o local do serviço') 
-    tipo_combustivel = st.selectbox('Combustível:', ['Gasolina', 'Etanol', 'Diesel'])
-    preco_litro = st.number_input('Preço do litro do combustível (R$):', min_value=0.0, step=0.1)
-    km_rodado = st.number_input('Distância em km até o local do serviço:', min_value=0.0, step=0.1)
-    consumo_por_km = st.number_input('Consumo médio do veículo (km/L):', min_value=0.1, step=0.1)
-    
-    # Cálculo do custo do km rodado
-    preco_km = round(km_rodado / consumo_por_km) * preco_litro
-    
-    # Adiciona o preço do km rodado à tabela de materiais
-    if st.button('Adicionar km rodado'):
-        if preco_km > 0:
-            add_material(f'Km rodado ({tipo_combustivel})', km_rodado, preco_km / km_rodado)
-            st.success(f'Preço do km rodado adicionado: R${preco_km:.2f}')
-        else:
-            st.error('Não foi possível calcular o preço do km rodado. Verifique os dados inseridos.')
 
-    # Outros custos
-    st.write('## Outros Custos')
+st.title('Custos e Despesas')
+st.write('## Tubulação de Cobre')
     
-        # Ajudante
-    st.subheader('Ajudante')
-    qtde_ajudante = st.number_input('Quantos ajudantes', min_value=1, step=1)
-    valor_ajudante = st.number_input('Valor Diária', min_value=1.0, step=1.0)
-    total_ajudante = valor_ajudante * qtde_ajudante
-    if st.button('Adicionar Ajudante'):
-        if total_ajudante > 0:
-            add_material('Ajudante', qtde_ajudante, total_ajudante / qtde_ajudante)
-            st.success(f'Custos do ajudante adicionado: R$ {total_ajudante:.2f}')
-        else:
-            st.error('Não foi possível adicionar custos com ajudante. Verifique os dados') 
+# Usando selectbox para garantir entrada consistente
+cobre_liquido = st.selectbox('Selecione a bitola da linha de líquido:', ['1/4', '3/8'])
+cobre_succao = st.selectbox('Selecione a bitola da linha de succão:', ['3/8', '1/2', '5/8', '7/8', '3/4'])
+metros = st.number_input('Digite quantos metros tem a linha:', min_value=0.0, step=0.1)
+valor_cobre = st.number_input('Digite o preço do kg do cobre')
+preco_cobre = 0
+           
+if cobre_succao == '3/8' and cobre_liquido == '1/4':
+    preco_cobre = float(metros * 0.255 + metros * 0.132) * valor_cobre
     
-    # Alimentação
-    st.subheader('Alimentação')
-    pessoas_alim = st.number_input('Quantas pessoas', min_value=1, step=1)
-    custo_alim = st.number_input('Preço', min_value=1.0, step=1.0)
-    custo_total_alim = pessoas_alim * custo_alim
-    if st.button('Adicionar Alimentação'):
-        if custo_total_alim > 0:
-            add_material('Alimentação', pessoas_alim, custo_total_alim / pessoas_alim)
-            st.success(f'Custos de alimentação adicionado: R$ {custo_total_alim:.2f}')
-        else:
-            st.error('Não foi possível adicionar custos de alimentação. Verifique os valores.')
+elif cobre_succao == '1/2' and cobre_liquido == '1/4':
+    preco_cobre = float(metros * 0.285 + metros * 0.132) * valor_cobre
     
+elif cobre_succao == '5/8' and cobre_liquido == '3/8':
+    preco_cobre = float(metros * 0.365 + metros * 0.255) * valor_cobre
+    
+elif cobre_succao == '5/8' and cobre_liquido == '1/4':
+    preco_cobre = float(metros * 0.365 + metros * 0.132) * valor_cobre
+
+else:
+    st.warning('Combinação de bitolas não reconhecida. Verifique os valores inseridos.')
+    
+# Adiciona o preço do cobre à tabela de materiais
+if st.button('Adicionar Cobre'):
+    if preco_cobre > 0:
+        add_material('Cobre (Sucção: )' + cobre_succao + ', Líquido: ' + cobre_liquido + ')', metros, preco_cobre / metros)
+        st.success(f'O valor do cobre é R$ {preco_cobre:.2f} e foi adicionado à tabela ')
+    else:
+        st.error('Não foi possível calcular o valor do cobre. Verifique os dados inseridos')    
+
+# Seção para cálculo do km rodado
+st.write('### Cálculo do km rodado (ida e volta) até o local do serviço') 
+tipo_combustivel = st.selectbox('Combustível:', ['Gasolina', 'Etanol', 'Diesel'])
+preco_litro = st.number_input('Preço do litro do combustível (R$):', min_value=0.0, step=0.1)
+km_rodado = st.number_input('Distância em km até o local do serviço:', min_value=0.0, step=0.1)
+consumo_por_km = st.number_input('Consumo médio do veículo (km/L):', min_value=0.1, step=0.1)
+
+# Cálculo do custo do km rodado
+preco_km = round(km_rodado / consumo_por_km) * preco_litro
+
+# Adiciona o preço do km rodado à tabela de materiais
+if st.button('Adicionar km rodado'):
+    if preco_km > 0:
+        add_material(f'Km rodado ({tipo_combustivel})', km_rodado, preco_km / km_rodado)
+        st.success(f'Preço do km rodado adicionado: R${preco_km:.2f}')
+    else:
+        st.error('Não foi possível calcular o preço do km rodado. Verifique os dados inseridos.')
+
+# Outros custos
+st.write('## Outros Custos')
+
+# Ajudante
+st.subheader('Ajudante')
+qtde_ajudante = st.number_input('Quantos ajudantes', min_value=1, step=1)
+valor_ajudante = st.number_input('Valor Diária', min_value=1.0, step=1.0)
+total_ajudante = valor_ajudante * qtde_ajudante
+if st.button('Adicionar Ajudante'):
+    if total_ajudante > 0:
+        add_material('Ajudante', qtde_ajudante, total_ajudante / qtde_ajudante)
+        st.success(f'Custos do ajudante adicionado: R$ {total_ajudante:.2f}')
+    else:
+        st.error('Não foi possível adicionar custos com ajudante. Verifique os dados') 
+
+# Alimentação
+st.subheader('Alimentação')
+pessoas_alim = st.number_input('Quantas pessoas', min_value=1, step=1)
+custo_alim = st.number_input('Preço', min_value=1.0, step=1.0)
+custo_total_alim = pessoas_alim * custo_alim
+if st.button('Adicionar Alimentação'):
+    if custo_total_alim > 0:
+        add_material('Alimentação', pessoas_alim, custo_total_alim / pessoas_alim)
+        st.success(f'Custos de alimentação adicionado: R$ {custo_total_alim:.2f}')
+    else:
+        st.error('Não foi possível adicionar custos de alimentação. Verifique os valores.')
+
 # Entrada de materiais adicionais
 st.write('### Adicionar outros materiais')
 
 # Inicializa os campos temporários se ainda não estiverem definidos
-if 'material_input' not in st.session_state:
-    st.session_state['material_input'] = ''
+if 'materiais' not in st.session_state:
+    st.session_state['materiais'] = []
+
 if 'quantidade_input' not in st.session_state:
     st.session_state['quantidade_input'] = 0.0
+
 if 'preco_unit_input' not in st.session_state:
     st.session_state['preco_unit_input'] = 0.0
 
+if 'material_input' not in st.session_state:
+    st.session_state['material_input'] = ''
+
+# Função para resetar os campos
+def reseta_campos():
+    st.session_state['material_input'] = ''
+    st.session_state['quantidade_input'] = 0.0
+    st.session_state['preco_unit_input'] = 0.0
+
+
 # Campos de entrada para o material adicional
-st.session_state['material_input'] = st.text_input(
-    'Nome do Material:', st.session_state['material_input'], key='new_material'
+material_input = st.text_input(
+    'Nome do Material:',
+    value=st.session_state['material_input'],
+    key="material_input_widget"
 )
-st.session_state['quantidade_input'] = st.number_input(
-    'Quantidade:', min_value=0.0, step=0.1, value=st.session_state['quantidade_input'], key='new_quantity'
+
+quantidade_input = st.number_input(
+    'Quantidade:',
+    min_value=0.0,
+    step=0.1,
+    value=st.session_state['quantidade_input'],
+    key="quantidade_input_widget"
 )
-st.session_state['preco_unit_input'] = st.number_input(
-    'Preço Unitário (R$):', min_value=0.0, step=0.1, value=st.session_state['preco_unit_input'], key='new_price_unit'
+
+preco_unit_input = st.number_input(
+    'Preço Unitário (R$):',
+    min_value=0.0,
+    step=0.1,
+    value=st.session_state['preco_unit_input'],
+    key="preco_unit_input_widget"
 )
 
 # Botão para incluir material adicional
 if st.button('Adicionar Material'):
-    material_input = st.session_state['material_input']
-    quantidade_input = st.session_state['quantidade_input']
-    preco_unit_input = st.session_state['preco_unit_input']
+    material = material_input.strip()
+    quantidade = quantidade_input
+    preco_unitario = preco_unit_input
 
-    if material_input and quantidade_input > 0 and preco_unit_input > 0:
-        add_material(material_input, quantidade_input, preco_unit_input)
-        
-        # Limpa os campos após adicionar o material
-        st.session_state['material_input'] = ''
-        st.session_state['quantidade_input'] = 0.0
-        st.session_state['preco_unit_input'] = 0.0
-
-        st.success('Material adicionado com sucesso!')
+    if material and quantidade > 0 and preco_unitario > 0:
+        # Adiciona à lista de materiais
+        st.session_state['materiais'].append({
+            'Material': material,
+            'Quantidade': quantidade,
+            'Preço Unitário': preco_unitario,
+        })
+        st.success(f'Material "{material}" adicionado com sucesso!')
+        reseta_campos()  # Reseta os campos no session state
     else:
         st.error('Preencha todos os campos corretamente.')
+
 
 # Exibição da tabela de materiais usando AgGrid
 if st.session_state['materiais']:
